@@ -79,5 +79,19 @@ if ! kill -0 "$STREAM_PID" 2>/dev/null; then
 fi
 
 echo ""
-echo "[$(date +%H:%M:%S)] Opening EEG viewer — close the window to stop."
-muselsl view --backend MacOSX
+while kill -0 "$STREAM_PID" 2>/dev/null; do
+  echo "[$(date +%H:%M:%S)] Opening EEG viewer."
+  echo "Tip: press 'r' inside the viewer to reconnect/reset, or close the viewer to reopen it without restarting BLE."
+  muselsl view --backend MacOSX || true
+
+  if ! kill -0 "$STREAM_PID" 2>/dev/null; then
+    echo "[$(date +%H:%M:%S)] Stream ended while viewer was closed."
+    break
+  fi
+
+  echo ""
+  read -r -p "Viewer closed. Press Enter to reopen using the same stream, or type q to stop: " REOPEN_REPLY
+  if [[ "$REOPEN_REPLY" =~ ^[Qq]$ ]]; then
+    break
+  fi
+done
